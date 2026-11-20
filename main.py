@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
 """news-image-20261120 entrypoint.
 
-Renders the Friday 20 November 2026 front page with compose.render()
-and writes it to /output/entry.png. Deterministic: no network, no clock,
-no randomness anywhere in the render path.
+Copies the pre-rendered front-page image (image.png, next to this file)
+to /output/entry.png. Deterministic: identical bytes on every run.
+Standard library only; no network access. The grader's runtime is
+standard-library-only (RULES.txt: "nothing is installed before it
+runs"), so this entrypoint must not import Pillow or any other
+third-party package; compose.py is kept in the repo as the build
+script that produced image.png, but it is not run here.
 """
+
 import os
-import sys
+import shutil
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from compose import render
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def main() -> None:
-    out = os.environ.get("OUTPUT_PATH", "/output/entry.png")
-    parent = os.path.dirname(out)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    render(out)
-    print("wrote %s" % out)
+def main():
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(out_dir, exist_ok=True)
+    src = os.path.join(HERE, "image.png")
+    dst = os.path.join(out_dir, "entry.png")
+    with open(src, "rb") as f_in, open(dst, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    print("wrote %s" % dst)
 
 
 if __name__ == "__main__":
